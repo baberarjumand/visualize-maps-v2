@@ -14,6 +14,28 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content> 
-  <agm-map id="map_canvas" [latitude]="currentLat" [longitude]="currentLng" [zoom]="currentZoom"></agm-map>
+<ion-content>
+  <agm-map
+    id="agmMapElement"
+    [latitude]="currentLat"
+    [longitude]="currentLng"
+    [zoom]="currentZoom"
+    [usePanning]="true"
+    (centerChange)="mapCenterChanged($event)"
+    ><agm-marker
+      [latitude]="currentLat"
+      [longitude]="currentLng"
+      [markerDraggable]="true"
+      (dragEnd)="markerDragEnd($event)"
+    ></agm-marker>
+  </agm-map>
+
+  <ion-button expand="block" color="tertiary" (click)="goToVisImagePage()">
+    <ion-icon
+      slot="start"
+      [ios]="'images-outline'"
+      [md]="'images-sharp'"
+    ></ion-icon
+    >Visualize</ion-button
+  >
 </ion-content>

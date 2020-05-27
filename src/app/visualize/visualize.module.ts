@@ -8,7 +8,7 @@ import { VisualizePageRoutingModule } from './visualize-routing.module';
 
 import { VisualizePage } from './visualize.page';
 
-import { AgmCoreModule } from '@agm/core';
+import { AgmCoreModule, GoogleMapsAPIWrapper } from '@agm/core';
 import { environment } from '../../environments/environment';
 
 @NgModule({
@@ -23,5 +23,6 @@ import { environment } from '../../environments/environment';
     }),
   ],
   declarations: [VisualizePage],
+  providers: [GoogleMapsAPIWrapper]
 })
 export class VisualizePageModule {}
