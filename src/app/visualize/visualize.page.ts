@@ -7,6 +7,10 @@ import { LocationService } from '../services/location.service';
   styleUrls: ['./visualize.page.scss'],
 })
 export class VisualizePage implements OnInit {
+  // start coords set at Big Ben
+  currentLat = 51.50072919999999;
+  currentLng = -0.1246254;
+  currentZoom = 14;
 
   constructor(private locationService: LocationService) { }
 
@@ -14,7 +18,9 @@ export class VisualizePage implements OnInit {
   }
 
   async locateUser() {
-    await this.locationService.getCurrentPosition();
+    const currentCoords = await this.locationService.getCurrentPosition();
+    this.currentLat = currentCoords.lat;
+    this.currentLng = currentCoords.lng;
   }
 
 }

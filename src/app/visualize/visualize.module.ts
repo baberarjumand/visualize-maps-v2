@@ -8,13 +8,20 @@ import { VisualizePageRoutingModule } from './visualize-routing.module';
 
 import { VisualizePage } from './visualize.page';
 
+import { AgmCoreModule } from '@agm/core';
+import { environment } from '../../environments/environment';
+
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    VisualizePageRoutingModule
+    VisualizePageRoutingModule,
+    AgmCoreModule.forRoot({
+      apiKey: environment.gmapsApiKey,
+      libraries: ['places'],
+    }),
   ],
-  declarations: [VisualizePage]
+  declarations: [VisualizePage],
 })
 export class VisualizePageModule {}

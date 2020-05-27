@@ -19,5 +19,10 @@ export class LocationService {
       coordinates.coords.longitude;
     console.log(alertMessage);
     // alert(alertMessage);
+    const currentCoords = {
+      lat: coordinates.coords.latitude,
+      lng: coordinates.coords.longitude
+    };
+    return currentCoords;
   }
 }
