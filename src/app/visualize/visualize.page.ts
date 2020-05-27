@@ -20,7 +20,7 @@ interface LatLngObject {
   styleUrls: ['./visualize.page.scss'],
 })
 export class VisualizePage implements OnInit, OnDestroy {
-  // start coords set at Big Ben
+  // starting coords set at Big Ben
   currentLat = 51.50072919999999;
   currentLng = -0.1246254;
   currentZoom = 14;
@@ -32,8 +32,8 @@ export class VisualizePage implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.currentLatLngSub = this.currentLatLngObs$
-      .pipe(debounceTime(500))
-      .subscribe((latLng) => {
+      .pipe(debounceTime(100))
+      .subscribe((latLng: LatLngObject) => {
         // console.log(latLng);
         this.currentLat = latLng.lat;
         this.currentLng = latLng.lng;
@@ -46,12 +46,7 @@ export class VisualizePage implements OnInit, OnDestroy {
     }
   }
 
-  async locateUser() {
-    const currentCoords = await this.locationService.getCurrentPosition();
-    this.setCurrentCoords(currentCoords.lat, currentCoords.lng);
-  }
-
-  setCurrentCoords(lat, lng) {
+  setCurrentCenterCoords(lat, lng) {
     // this.currentLat = lat;
     // this.currentLng = lng;
     const newLatLngObject: LatLngObject = {
@@ -61,17 +56,18 @@ export class VisualizePage implements OnInit, OnDestroy {
     this.currentLatLngSubject.next(newLatLngObject);
   }
 
+  async locateUser() {
+    const currentCoords = await this.locationService.getCurrentPosition();
+    this.setCurrentCenterCoords(currentCoords.lat, currentCoords.lng);
+  }
+
   markerDragEnd($event: any) {
     // console.log(JSON.stringify($event));
-    this.setCurrentCoords($event.coords.lat, $event.coords.lng);
+    this.setCurrentCenterCoords($event.coords.lat, $event.coords.lng);
   }
 
   mapCenterChanged($event: any) {
-    const newLatLngObject: LatLngObject = {
-      lat: $event.lat,
-      lng: $event.lng,
-    };
-    this.currentLatLngSubject.next(newLatLngObject);
+    this.setCurrentCenterCoords($event.lat, $event.lng);
   }
 
   goToVisImagePage() {}
