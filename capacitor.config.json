@@ -1,0 +1,13 @@
+{
+  "appId": "io.ionic.starter",
+  "appName": "visualize-maps-v2",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  },
+  "cordova": {}
+}
