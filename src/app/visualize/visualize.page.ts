@@ -9,7 +9,7 @@ import {
 import { LocationService } from '../services/location.service';
 import { debounceTime } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
-import { MapsAPILoader } from '@agm/core';
+import { MapsAPILoader, AgmMap } from '@agm/core';
 import { IonSearchbar } from '@ionic/angular';
 
 interface LatLngObject {
@@ -34,6 +34,10 @@ export class VisualizePage implements OnInit, OnDestroy {
 
   @ViewChild('searchbar', { static: false }) searchbarRef: IonSearchbar;
   private autocomplete: any;
+  // @ViewChild('agmMapElement', { static: false }) mapElRef: AgmMap;
+
+  // this value is defined in meters
+  private nearbyPlacesSearchRadius = 250;
 
   constructor(
     private locationService: LocationService,
@@ -68,6 +72,7 @@ export class VisualizePage implements OnInit, OnDestroy {
             return;
           }
 
+          // console.log(place);
           this.setCurrentCenterCoords(
             place.geometry.location.lat(),
             place.geometry.location.lng()
@@ -107,6 +112,51 @@ export class VisualizePage implements OnInit, OnDestroy {
         this.currentLat +
         '\nCurrentLng: ' +
         this.currentLng
+    );
+
+    const resultPlaceIds = [];
+    const resultImageUrls = [];
+
+    const placesSearchRequest = {
+      location: new google.maps.LatLng(this.currentLat, this.currentLng),
+      radius: this.nearbyPlacesSearchRadius,
+    };
+    const placesService = new google.maps.places.PlacesService(
+      document.getElementById('hiddenDiv') as HTMLDivElement
+    );
+
+    // fetch list of nearby places according to current map center
+    placesService.nearbySearch(
+      placesSearchRequest,
+      (results, nearbySearchStatus) => {
+        if (nearbySearchStatus === google.maps.places.PlacesServiceStatus.OK) {
+          // console.log(results);
+          results.forEach((result) => resultPlaceIds.push(result.place_id));
+          // console.log(resultPlaceIds);
+
+          // fetch imageUrls for each nearby placeId
+          resultPlaceIds.forEach((placeId) => {
+            const placeDetailsRequest = { placeId };
+            placesService.getDetails(
+              placeDetailsRequest,
+              (placeResult, getPlaceDetailStatus) => {
+                if (
+                  getPlaceDetailStatus ===
+                  google.maps.places.PlacesServiceStatus.OK
+                ) {
+                  if (placeResult.photos) {
+                    const resultPhotos = placeResult.photos;
+                    resultPhotos.forEach((photo) => {
+                      resultImageUrls.push(photo.getUrl({ maxHeight: 500 }));
+                    });
+                  }
+                }
+              }
+            );
+          });
+          console.log(resultImageUrls);
+        }
+      }
     );
   }
 }
