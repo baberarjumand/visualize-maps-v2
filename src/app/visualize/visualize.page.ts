@@ -10,7 +10,8 @@ import { LocationService } from '../services/location.service';
 import { debounceTime } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { MapsAPILoader, AgmMap } from '@agm/core';
-import { IonSearchbar } from '@ionic/angular';
+import { IonSearchbar, ModalController } from '@ionic/angular';
+import { ResultsModalPage } from '../results-modal/results-modal.page';
 
 interface LatLngObject {
   lat: number;
@@ -38,11 +39,13 @@ export class VisualizePage implements OnInit, OnDestroy {
 
   // this value is defined in meters
   private nearbyPlacesSearchRadius = 250;
+  private maxResultImageHeight = 500;
 
   constructor(
     private locationService: LocationService,
     private mapsApiLoader: MapsAPILoader,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private modalController: ModalController
   ) {}
 
   ngOnInit() {
@@ -62,21 +65,23 @@ export class VisualizePage implements OnInit, OnDestroy {
   }
 
   ionViewDidEnter() {
-    this.searchbarRef.getInputElement().then((inputEl: HTMLInputElement) => {
-      this.autocomplete = new google.maps.places.Autocomplete(inputEl);
-      this.autocomplete.addListener('place_changed', () => {
-        this.ngZone.run(() => {
-          const place: google.maps.places.PlaceResult = this.autocomplete.getPlace();
+    this.mapsApiLoader.load().then(() => {
+      this.searchbarRef.getInputElement().then((inputEl: HTMLInputElement) => {
+        this.autocomplete = new google.maps.places.Autocomplete(inputEl);
+        this.autocomplete.addListener('place_changed', () => {
+          this.ngZone.run(() => {
+            const place: google.maps.places.PlaceResult = this.autocomplete.getPlace();
 
-          if (place.geometry === undefined || place.geometry === null) {
-            return;
-          }
+            if (place.geometry === undefined || place.geometry === null) {
+              return;
+            }
 
-          // console.log(place);
-          this.setCurrentCenterCoords(
-            place.geometry.location.lat(),
-            place.geometry.location.lng()
-          );
+            // console.log(place);
+            this.setCurrentCenterCoords(
+              place.geometry.location.lat(),
+              place.geometry.location.lng()
+            );
+          });
         });
       });
     });
@@ -107,56 +112,78 @@ export class VisualizePage implements OnInit, OnDestroy {
   }
 
   goToVisImagePage() {
-    console.log(
-      'Current Center Coords:\nCurrentLat: ' +
-        this.currentLat +
-        '\nCurrentLng: ' +
-        this.currentLng
-    );
+    this.mapsApiLoader.load().then(() => {
+      console.log(
+        'Current Center Coords:\nCurrentLat: ' +
+          this.currentLat +
+          '\nCurrentLng: ' +
+          this.currentLng
+      );
 
-    const resultPlaceIds = [];
-    const resultImageUrls = [];
+      const resultPlaceIds = [];
+      const resultImageUrls: string[] = [];
 
-    const placesSearchRequest = {
-      location: new google.maps.LatLng(this.currentLat, this.currentLng),
-      radius: this.nearbyPlacesSearchRadius,
-    };
-    const placesService = new google.maps.places.PlacesService(
-      document.getElementById('hiddenDiv') as HTMLDivElement
-    );
+      const placesSearchRequest = {
+        location: new google.maps.LatLng(this.currentLat, this.currentLng),
+        radius: this.nearbyPlacesSearchRadius,
+      };
+      const placesService = new google.maps.places.PlacesService(
+        document.getElementById('hiddenDiv') as HTMLDivElement
+      );
 
-    // fetch list of nearby places according to current map center
-    placesService.nearbySearch(
-      placesSearchRequest,
-      (results, nearbySearchStatus) => {
-        if (nearbySearchStatus === google.maps.places.PlacesServiceStatus.OK) {
-          // console.log(results);
-          results.forEach((result) => resultPlaceIds.push(result.place_id));
-          // console.log(resultPlaceIds);
+      // fetch list of nearby places according to current map center
+      placesService.nearbySearch(
+        placesSearchRequest,
+        (results, nearbySearchStatus) => {
+          if (
+            nearbySearchStatus === google.maps.places.PlacesServiceStatus.OK
+          ) {
+            // console.log(results);
+            results.forEach((result) => resultPlaceIds.push(result.place_id));
+            // console.log(resultPlaceIds);
 
-          // fetch imageUrls for each nearby placeId
-          resultPlaceIds.forEach((placeId) => {
-            const placeDetailsRequest = { placeId };
-            placesService.getDetails(
-              placeDetailsRequest,
-              (placeResult, getPlaceDetailStatus) => {
-                if (
-                  getPlaceDetailStatus ===
-                  google.maps.places.PlacesServiceStatus.OK
-                ) {
-                  if (placeResult.photos) {
-                    const resultPhotos = placeResult.photos;
-                    resultPhotos.forEach((photo) => {
-                      resultImageUrls.push(photo.getUrl({ maxHeight: 500 }));
-                    });
+            // fetch imageUrls for each nearby placeId
+            resultPlaceIds.forEach((placeId) => {
+              const placeDetailsRequest = { placeId };
+              placesService.getDetails(
+                placeDetailsRequest,
+                (placeResult, getPlaceDetailStatus) => {
+                  if (
+                    getPlaceDetailStatus ===
+                    google.maps.places.PlacesServiceStatus.OK
+                  ) {
+                    if (placeResult.photos) {
+                      const resultPhotos = placeResult.photos;
+                      resultPhotos.forEach((photo) => {
+                        // console.log(typeof photo.getUrl({ maxHeight: this.maxResultImageHeight }));
+                        // resultImageUrls.push(
+                        //   photo.getUrl({ maxHeight: this.maxResultImageHeight })
+                        // );
+                        const tempImageUrl: string = photo.getUrl({
+                          maxHeight: this.maxResultImageHeight,
+                        });
+                        resultImageUrls.push(tempImageUrl);
+                      });
+                    }
                   }
                 }
+              );
+            });
+            // console.log(Object.keys(resultImageUrls));
+            setTimeout(async () => {
+              console.log(resultImageUrls);
+
+              if (resultImageUrls.length > 0) {
+                const modal = await this.modalController.create({
+                  component: ResultsModalPage,
+                });
+                return await modal.present();
               }
-            );
-          });
-          console.log(resultImageUrls);
+            }, 500);
+            // resultImageUrls.forEach((url) => console.log(url));
+          }
         }
-      }
-    );
+      );
+    });
   }
 }
