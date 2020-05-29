@@ -138,9 +138,7 @@ export class VisualizePage implements OnInit, OnDestroy {
           if (
             nearbySearchStatus === google.maps.places.PlacesServiceStatus.OK
           ) {
-            // console.log(results);
             results.forEach((result) => resultPlaceIds.push(result.place_id));
-            // console.log(resultPlaceIds);
 
             // fetch imageUrls for each nearby placeId
             resultPlaceIds.forEach((placeId) => {
@@ -155,10 +153,6 @@ export class VisualizePage implements OnInit, OnDestroy {
                     if (placeResult.photos) {
                       const resultPhotos = placeResult.photos;
                       resultPhotos.forEach((photo) => {
-                        // console.log(typeof photo.getUrl({ maxHeight: this.maxResultImageHeight }));
-                        // resultImageUrls.push(
-                        //   photo.getUrl({ maxHeight: this.maxResultImageHeight })
-                        // );
                         const tempImageUrl: string = photo.getUrl({
                           maxHeight: this.maxResultImageHeight,
                         });
@@ -171,16 +165,16 @@ export class VisualizePage implements OnInit, OnDestroy {
             });
             // console.log(Object.keys(resultImageUrls));
             setTimeout(async () => {
-              console.log(resultImageUrls);
+              // console.log(resultImageUrls);
 
               if (resultImageUrls.length > 0) {
                 const modal = await this.modalController.create({
                   component: ResultsModalPage,
+                  componentProps: { imagesResultSet: resultImageUrls },
                 });
                 return await modal.present();
               }
             }, 500);
-            // resultImageUrls.forEach((url) => console.log(url));
           }
         }
       );

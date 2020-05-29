@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { ModalController } from '@ionic/angular';
 
 @Component({
@@ -7,9 +7,15 @@ import { ModalController } from '@ionic/angular';
   styleUrls: ['./results-modal.page.scss'],
 })
 export class ResultsModalPage implements OnInit {
+  @Input() imagesResultSet: string[];
+
   constructor(private modalController: ModalController) {}
 
   ngOnInit() {}
+
+  ionViewDidEnter() {
+    console.log(this.imagesResultSet);
+  }
 
   dismissModal() {
     this.modalController.dismiss({ dismissed: true });
