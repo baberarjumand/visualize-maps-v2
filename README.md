@@ -3,6 +3,9 @@
 This app was developed to explore and practice implementing some of the functionalities offered by the [Google Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/reference). The [@agm/core](https://angular-maps.com/) (Angular Maps) plugin was also utilized.
 <br><br>
 
+A user can search for any specific place on Google Maps via text, or the user can drag the map to a specific spot on the map. Then the user can click 'Visualize' on that location to fetch images from that spot on the map (nearby locations are also included).
+<br><br>
+
 The following stack was used for this app:<br>
 Ionic | Angular | Firebase
 <br><br>
