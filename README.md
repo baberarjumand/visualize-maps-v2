@@ -24,4 +24,4 @@ export const environment = {
   gmapsApiKey: 'YOUR-API-KEY'
 };
 ```
-To serve from a local serve, run `ionic serve` or `firebase serve`.
+To serve from a local server, run `ionic serve` or `firebase serve`.
