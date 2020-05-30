@@ -28,6 +28,9 @@ interface LatLngObject {
   styleUrls: ['./visualize.page.scss'],
 })
 export class VisualizePage implements OnInit, OnDestroy {
+  private nearbyPlacesSearchRadius = 150; // this value is defined in meters
+  private maxResultImageHeight = 300; // this value is defined in pixels
+
   // starting coords set at Big Ben
   currentLat = 51.50072919999999;
   currentLng = -0.1246254;
@@ -41,8 +44,7 @@ export class VisualizePage implements OnInit, OnDestroy {
   private autocomplete: any;
   // @ViewChild('agmMapElement', { static: false }) mapElRef: AgmMap;
 
-  private nearbyPlacesSearchRadius = 100; // this value is defined in meters
-  private maxResultImageHeight = 300; // this value is defined in pixels
+  private placesService;
 
   constructor(
     private locationService: LocationService,
@@ -53,6 +55,17 @@ export class VisualizePage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.mapsApiLoader
+      .load()
+      .then(() => {
+        this.placesService = new google.maps.places.PlacesService(
+          document.getElementById('hiddenDiv') as HTMLDivElement
+        );
+      })
+      .catch((err) => {
+        alert('Failed to load map');
+        console.log('Failed to load map\n' + err);
+      });
     this.currentLatLngSub = this.currentLatLngObs$
       .pipe(debounceTime(100))
       .subscribe((latLng: LatLngObject) => {
@@ -123,90 +136,54 @@ export class VisualizePage implements OnInit, OnDestroy {
     this.mapsApiLoader
       .load()
       .then(() => {
-        // console.log(
-        //   'Current Center Coords:\nCurrentLat: ' +
-        //     this.currentLat +
-        //     '\nCurrentLng: ' +
-        //     this.currentLng
-        // );
-
         const resultPlaceIds = [];
-        const resultImageUrls: string[] = [];
 
         const placesSearchRequest = {
           location: new google.maps.LatLng(this.currentLat, this.currentLng),
           radius: this.nearbyPlacesSearchRadius,
         };
-        const placesService = new google.maps.places.PlacesService(
-          document.getElementById('hiddenDiv') as HTMLDivElement
-        );
 
-        // fetch list of nearby places according to current map center
-        placesService.nearbySearch(
+        // fetch placeIds of places near current map center
+        this.placesService.nearbySearch(
           placesSearchRequest,
-          (results, nearbySearchStatus) => {
+          async (nearbyPlacesResults, nearbySearchStatus) => {
             if (
               nearbySearchStatus === google.maps.places.PlacesServiceStatus.OK
             ) {
-              results.forEach((result) => resultPlaceIds.push(result.place_id));
+              nearbyPlacesResults.forEach((place) =>
+                resultPlaceIds.push(place.place_id)
+              );
+              // console.log(resultPlaceIds.length);
+              loading.dismiss();
 
-              // fetch imageUrls for each nearby placeId
-              resultPlaceIds.forEach((placeId) => {
-                const placeDetailsRequest = { placeId };
-                placesService.getDetails(
-                  placeDetailsRequest,
-                  (placeResult, getPlaceDetailStatus) => {
-                    if (
-                      getPlaceDetailStatus ===
-                      google.maps.places.PlacesServiceStatus.OK
-                    ) {
-                      if (placeResult.photos) {
-                        const resultPhotos = placeResult.photos;
-                        resultPhotos.forEach((photo) => {
-                          const tempImageUrl: string = photo.getUrl({
-                            maxHeight: this.maxResultImageHeight,
-                          });
-                          resultImageUrls.push(tempImageUrl);
-                        });
-                      }
-                    } else {
-                      // alert(
-                      //   'Could not fetch place details for placeId: ' + placeId
-                      // );
-                      console.log(
-                        'Could not fetch place details for placeId: ' +
-                          placeId +
-                          '\ngetPlaceDetailsStatus: ' +
-                          getPlaceDetailStatus
-                      );
-                    }
-                  }
+              if (resultPlaceIds.length > 0) {
+                // display modal if one or more placeIds found
+                const modal = await this.modalController.create({
+                  component: ResultsModalPage,
+                  componentProps: { nearbyPlaceIds: resultPlaceIds },
+                });
+                loading.dismiss();
+                return await modal.present();
+              } else {
+                loading.dismiss();
+                alert(
+                  'There were no places found at this location. Please try another location.'
                 );
-              });
-              // console.log(Object.keys(resultImageUrls));
-              setTimeout(async () => {
-                // console.log(resultImageUrls);
-
-                if (resultImageUrls.length > 0) {
-                  const modal = await this.modalController.create({
-                    component: ResultsModalPage,
-                    componentProps: { imagesResultSet: resultImageUrls },
-                  });
-                  loading.dismiss();
-                  return await modal.present();
-                } else {
-                  alert(
-                    'No images found at this location. Please try another location.'
-                  );
-                  console.log(
-                    'No images found at this location. Please try another location.'
-                  );
-                  loading.dismiss();
-                }
-              }, 500);
+                console.log(
+                  'There were no places found at this location. Please try another location.'
+                );
+              }
             } else {
-              alert('Nearby Places Search failed');
-              console.log('Nearby Search Status: ' + nearbySearchStatus);
+              alert(
+                'Nearby Places Search failed\n' +
+                  'Nearby Search Status: ' +
+                  nearbySearchStatus
+              );
+              console.log(
+                'Nearby Places Search failed\n' +
+                  'Nearby Search Status: ' +
+                  nearbySearchStatus
+              );
               loading.dismiss();
             }
           }
@@ -214,7 +191,7 @@ export class VisualizePage implements OnInit, OnDestroy {
       })
       .catch((err) => {
         alert('Failed to load map');
-        console.log(err);
+        console.log('Failed to load map\n' + err);
         loading.dismiss();
       });
   }

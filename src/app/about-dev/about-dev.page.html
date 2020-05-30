@@ -3,8 +3,87 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>about-dev</ion-title>
+    <ion-title>Connect with the Author</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content> </ion-content>
+<ion-content>
+  <ion-grid fixed>
+    <ion-row>
+      <ion-col size-md="8" offset-md="2" class="ion-text-center">
+        <img src="../../assets/author.jpg" />
+        <ion-text>
+          <h1>Baber Arjumand</h1>
+          <p>
+            This mini-project was developed to get familiar with some of the
+            functionality offered by the Google Maps JavaScript API.
+          </p>
+          <p>Connect with the author:</p>
+        </ion-text>
+        <ion-button
+          expand="block"
+          size="large"
+          class="ion-margin"
+          color="primary"
+          href="https://www.linkedin.com/in/baberarjumand/"
+          target="_blank"
+        >
+          <ion-icon
+            [ios]="'logo-linkedin'"
+            [md]="'logo-linkedin'"
+            slot="start"
+          ></ion-icon>
+          LinkedIn
+        </ion-button>
+        <ion-button
+          expand="block"
+          size="large"
+          class="ion-margin"
+          color="secondary"
+          href="https://github.com/baberarjumand"
+          target="_blank"
+        >
+          <ion-icon
+            [ios]="'logo-github'"
+            [md]="'logo-github'"
+            slot="start"
+          ></ion-icon>
+          GitHub
+        </ion-button>
+        <ion-button
+          expand="block"
+          size="large"
+          class="ion-margin"
+          color="danger"
+          href="mailto:baber.arjumand@gmail.com"
+          target="_blank"
+        >
+          <ion-icon
+            [ios]="'logo-google'"
+            [md]="'logo-google'"
+            slot="start"
+          ></ion-icon>
+          Email
+        </ion-button>
+        <ion-text>
+          <p>The source code for this app can be found on the link below:</p>
+        </ion-text>
+        <ion-button
+          expand="block"
+          size="large"
+          class="ion-margin"
+          color="tertiary"
+          href="https://github.com/baberarjumand/visualize-maps-v2"
+          target="_blank"
+        >
+          <ion-icon
+            [ios]="'logo-github'"
+            [md]="'logo-github'"
+            slot="start"
+          ></ion-icon>
+          Source Code
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

@@ -9,7 +9,8 @@
         ></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Found {{ imagesResultSet.length }} images</ion-title>
+    <!-- <ion-title>Found {{ imagesResultSet.length }} images</ion-title> -->
+    <ion-title>Images</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -17,17 +18,26 @@
   <!-- <ion-button>Dismiss</ion-button> -->
   <ion-grid fixed>
     <ion-row>
-      <ion-col
-        size="12"
-        size-md="6"
-        size-lg="4"
-        size-xl="3"
-        *ngFor="let imageUrl of imagesResultSet"
-      >
-        <!-- <div *ngFor="let imageUrl of imagesResultSet"> -->
+      <ion-spinner
+        *ngIf="imageLoading"
+        class="ion-text-center ion-padding ion-margin"
+      ></ion-spinner>
+      <!-- <ion-col size="12" size-md="6" *ngFor="let imageUrl of imagesResultSet">
         <ion-img [src]="imageUrl"></ion-img>
-        <!-- </div> -->
+      </ion-col> -->
+      <ion-col size="12" size-md="6" *ngFor="let imageUrl of imagesResultSet">
+        <ion-img
+          [src]="imageUrl"
+          (ionImgWillLoad)="imageLoading=true;"
+          (ionImgDidLoad)="imageLoading=false;"
+        ></ion-img>
       </ion-col>
     </ion-row>
   </ion-grid>
+
+  <ion-infinite-scroll threshold="10%" (ionInfinite)="loadMoreImages($event)">
+    <ion-infinite-scroll-content></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+
+  <div id="hiddenDiv" hidden></div>
 </ion-content>
