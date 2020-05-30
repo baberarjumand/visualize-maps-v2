@@ -13,8 +13,8 @@ import { ResultsModalPage } from './results-modal.page';
     CommonModule,
     FormsModule,
     IonicModule,
-    ResultsModalPageRoutingModule
+    ResultsModalPageRoutingModule,
   ],
-  declarations: [ResultsModalPage]
+  declarations: [ResultsModalPage],
 })
 export class ResultsModalPageModule {}

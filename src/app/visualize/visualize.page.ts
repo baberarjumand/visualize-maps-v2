@@ -10,7 +10,11 @@ import { LocationService } from '../services/location.service';
 import { debounceTime } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { MapsAPILoader, AgmMap } from '@agm/core';
-import { IonSearchbar, ModalController } from '@ionic/angular';
+import {
+  IonSearchbar,
+  ModalController,
+  LoadingController,
+} from '@ionic/angular';
 import { ResultsModalPage } from '../results-modal/results-modal.page';
 
 interface LatLngObject {
@@ -37,15 +41,15 @@ export class VisualizePage implements OnInit, OnDestroy {
   private autocomplete: any;
   // @ViewChild('agmMapElement', { static: false }) mapElRef: AgmMap;
 
-  // this value is defined in meters
-  private nearbyPlacesSearchRadius = 250;
-  private maxResultImageHeight = 500;
+  private nearbyPlacesSearchRadius = 100; // this value is defined in meters
+  private maxResultImageHeight = 300; // this value is defined in pixels
 
   constructor(
     private locationService: LocationService,
     private mapsApiLoader: MapsAPILoader,
     private ngZone: NgZone,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private loadingController: LoadingController
   ) {}
 
   ngOnInit() {
@@ -111,73 +115,107 @@ export class VisualizePage implements OnInit, OnDestroy {
     this.setCurrentCenterCoords($event.lat, $event.lng);
   }
 
-  goToVisImagePage() {
-    this.mapsApiLoader.load().then(() => {
-      console.log(
-        'Current Center Coords:\nCurrentLat: ' +
-          this.currentLat +
-          '\nCurrentLng: ' +
-          this.currentLng
-      );
+  async goToVisImagePage() {
+    const loading = await this.loadingController.create({
+      message: 'Fetching images...',
+    });
+    await loading.present();
+    this.mapsApiLoader
+      .load()
+      .then(() => {
+        // console.log(
+        //   'Current Center Coords:\nCurrentLat: ' +
+        //     this.currentLat +
+        //     '\nCurrentLng: ' +
+        //     this.currentLng
+        // );
 
-      const resultPlaceIds = [];
-      const resultImageUrls: string[] = [];
+        const resultPlaceIds = [];
+        const resultImageUrls: string[] = [];
 
-      const placesSearchRequest = {
-        location: new google.maps.LatLng(this.currentLat, this.currentLng),
-        radius: this.nearbyPlacesSearchRadius,
-      };
-      const placesService = new google.maps.places.PlacesService(
-        document.getElementById('hiddenDiv') as HTMLDivElement
-      );
+        const placesSearchRequest = {
+          location: new google.maps.LatLng(this.currentLat, this.currentLng),
+          radius: this.nearbyPlacesSearchRadius,
+        };
+        const placesService = new google.maps.places.PlacesService(
+          document.getElementById('hiddenDiv') as HTMLDivElement
+        );
 
-      // fetch list of nearby places according to current map center
-      placesService.nearbySearch(
-        placesSearchRequest,
-        (results, nearbySearchStatus) => {
-          if (
-            nearbySearchStatus === google.maps.places.PlacesServiceStatus.OK
-          ) {
-            results.forEach((result) => resultPlaceIds.push(result.place_id));
+        // fetch list of nearby places according to current map center
+        placesService.nearbySearch(
+          placesSearchRequest,
+          (results, nearbySearchStatus) => {
+            if (
+              nearbySearchStatus === google.maps.places.PlacesServiceStatus.OK
+            ) {
+              results.forEach((result) => resultPlaceIds.push(result.place_id));
 
-            // fetch imageUrls for each nearby placeId
-            resultPlaceIds.forEach((placeId) => {
-              const placeDetailsRequest = { placeId };
-              placesService.getDetails(
-                placeDetailsRequest,
-                (placeResult, getPlaceDetailStatus) => {
-                  if (
-                    getPlaceDetailStatus ===
-                    google.maps.places.PlacesServiceStatus.OK
-                  ) {
-                    if (placeResult.photos) {
-                      const resultPhotos = placeResult.photos;
-                      resultPhotos.forEach((photo) => {
-                        const tempImageUrl: string = photo.getUrl({
-                          maxHeight: this.maxResultImageHeight,
+              // fetch imageUrls for each nearby placeId
+              resultPlaceIds.forEach((placeId) => {
+                const placeDetailsRequest = { placeId };
+                placesService.getDetails(
+                  placeDetailsRequest,
+                  (placeResult, getPlaceDetailStatus) => {
+                    if (
+                      getPlaceDetailStatus ===
+                      google.maps.places.PlacesServiceStatus.OK
+                    ) {
+                      if (placeResult.photos) {
+                        const resultPhotos = placeResult.photos;
+                        resultPhotos.forEach((photo) => {
+                          const tempImageUrl: string = photo.getUrl({
+                            maxHeight: this.maxResultImageHeight,
+                          });
+                          resultImageUrls.push(tempImageUrl);
                         });
-                        resultImageUrls.push(tempImageUrl);
-                      });
+                      }
+                    } else {
+                      // alert(
+                      //   'Could not fetch place details for placeId: ' + placeId
+                      // );
+                      console.log(
+                        'Could not fetch place details for placeId: ' +
+                          placeId +
+                          '\ngetPlaceDetailsStatus: ' +
+                          getPlaceDetailStatus
+                      );
                     }
                   }
-                }
-              );
-            });
-            // console.log(Object.keys(resultImageUrls));
-            setTimeout(async () => {
-              // console.log(resultImageUrls);
+                );
+              });
+              // console.log(Object.keys(resultImageUrls));
+              setTimeout(async () => {
+                // console.log(resultImageUrls);
 
-              if (resultImageUrls.length > 0) {
-                const modal = await this.modalController.create({
-                  component: ResultsModalPage,
-                  componentProps: { imagesResultSet: resultImageUrls },
-                });
-                return await modal.present();
-              }
-            }, 500);
+                if (resultImageUrls.length > 0) {
+                  const modal = await this.modalController.create({
+                    component: ResultsModalPage,
+                    componentProps: { imagesResultSet: resultImageUrls },
+                  });
+                  loading.dismiss();
+                  return await modal.present();
+                } else {
+                  alert(
+                    'No images found at this location. Please try another location.'
+                  );
+                  console.log(
+                    'No images found at this location. Please try another location.'
+                  );
+                  loading.dismiss();
+                }
+              }, 500);
+            } else {
+              alert('Nearby Places Search failed');
+              console.log('Nearby Search Status: ' + nearbySearchStatus);
+              loading.dismiss();
+            }
           }
-        }
-      );
-    });
+        );
+      })
+      .catch((err) => {
+        alert('Failed to load map');
+        console.log(err);
+        loading.dismiss();
+      });
   }
 }

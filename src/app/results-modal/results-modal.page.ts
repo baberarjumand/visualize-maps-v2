@@ -14,7 +14,7 @@ export class ResultsModalPage implements OnInit {
   ngOnInit() {}
 
   ionViewDidEnter() {
-    console.log(this.imagesResultSet);
+    // console.log(this.imagesResultSet);
   }
 
   dismissModal() {

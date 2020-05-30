@@ -17,10 +17,11 @@ const routes: Routes = [
     loadChildren: () =>
       import('./about-dev/about-dev.module').then((m) => m.AboutDevPageModule),
   },
-  // {
-  //   path: 'results-modal',
-  //   loadChildren: () => import('./results-modal/results-modal.module').then( m => m.ResultsModalPageModule)
-  // },
+  {
+    // path: 'results-modal',
+    path: '',
+    loadChildren: () => import('./results-modal/results-modal.module').then( m => m.ResultsModalPageModule)
+  },
 ];
 
 @NgModule({
